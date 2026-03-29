@@ -20,27 +20,44 @@ const httpServer = createServer(app);
 
 // CORS configuration
 const allowedOrigins = [
-  process.env.FRONTEND_URL || "http://localhost:3000",
+  process.env.FRONTEND_URL,
   "http://localhost:3000",
-];
+].filter(Boolean) as string[];
 
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  }),
-);
+console.log("Allowed origins:", allowedOrigins);
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.some(allowed => origin.startsWith(allowed.replace(/\/$/, '')))) {
+      return callback(null, true);
+    }
+    
+    console.log("Blocked origin:", origin);
+    callback(new Error("Not allowed by CORS"));
+  },
+  credentials: true,
+}));
 
 app.use(express.json());
 
 // Socket.io setup with typed events
 const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
   cors: {
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      
+      if (allowedOrigins.some(allowed => origin.startsWith(allowed.replace(/\/$/, '')))) {
+        return callback(null, true);
+      }
+      
+      callback(new Error("Not allowed by CORS"));
+    },
     methods: ["GET", "POST"],
     credentials: true,
   },
-  // Performance optimizations
   pingTimeout: 60000,
   pingInterval: 25000,
 });
@@ -54,7 +71,15 @@ app.get("/health", (req, res) => {
   });
 });
 
-// API endpoint to reset grid (useful for testing)
+app.get("/", (req, res) => {
+  res.json({ 
+    name: "Grid Clash API",
+    status: "running",
+    health: "/health",
+  });
+});
+
+// API endpoint to reset grid
 app.post("/api/reset-grid", async (req, res) => {
   try {
     await gridService.resetGrid();
