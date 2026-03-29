@@ -12,9 +12,9 @@ export function UserStats({ user }: UserStatsProps) {
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
-      className="bg-[#FFFEF9] border-3 border-[#2D2A26] p-4"
+      className="bg-[#FFFEF9] border-2 rounded-xs border-[#2D2A26] p-4"
       style={{
-        boxShadow: "5px 5px 0px #2D2A26",
+        boxShadow: "4px 4px 1px #2D2A26",
         borderWidth: "3px",
       }}
     >
@@ -25,10 +25,10 @@ export function UserStats({ user }: UserStatsProps) {
       <div className="flex items-center gap-4">
         {/* Avatar */}
         <motion.div
-          className="w-14 h-14 flex items-center justify-center text-white text-xl font-black border-3 border-[#2D2A26]"
+          className="w-14 h-14 flex items-center justify-center text-white text-xl font-black border-2 rounded-md border-[#2D2A26]"
           style={{
             backgroundColor: user.color,
-            boxShadow: `4px 4px 0px #2D2A26, 0 0 20px ${user.color}60`,
+            boxShadow: `2px 2px 2px #2D2A26, 0 0 20px ${user.color}60`,
             borderWidth: "3px",
           }}
           whileHover={{ scale: 1.05 }}

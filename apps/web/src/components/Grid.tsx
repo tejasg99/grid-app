@@ -9,14 +9,16 @@ interface GridProps {
   grid: GridState;
   currentUser: User | null;
   isOnCooldown: boolean;
-  onCellClick: (cellId: string) => void;
+  onCellClaim: (cellId: string) => void;
+  onCellUnclaim: (cellId: string) => void;
 }
 
 export function Grid({
   grid,
   currentUser,
   isOnCooldown,
-  onCellClick,
+  onCellClaim, 
+  onCellUnclaim
 }: GridProps) {
   const { rows, cols } = grid.config;
 
@@ -32,12 +34,19 @@ export function Grid({
     });
   }, [grid.cells]);
 
-  // Memoized click handler
-  const handleCellClick = useCallback(
+  // Memoized claim unclaim handlers
+  const handleClaim = useCallback(
     (cellId: string) => {
-      onCellClick(cellId);
+      onCellClaim(cellId);
     },
-    [onCellClick],
+    [onCellClaim]
+  );
+
+  const handleUnclaim = useCallback(
+    (cellId: string) => {
+      onCellUnclaim(cellId);
+    },
+    [onCellUnclaim]
   );
 
   return (
@@ -49,9 +58,9 @@ export function Grid({
     >
       {/* Grid Container */}
       <div
-        className="p-3 sm:p-4 md:p-6 bg-[#FFFEF9] border-4 border-[#2D2A26]"
+        className="p-3 sm:p-4 md:p-6 bg-[#FFFEF9] border-3 border-[#323130] rounded-sm"
         style={{
-          boxShadow: "8px 8px 0px #2D2A26",
+          boxShadow: "6px 6px 8px #323130",
         }}
       >
         <div
@@ -70,7 +79,8 @@ export function Grid({
               cell={cell}
               isOwn={cell.ownerId === currentUser?.id}
               isOnCooldown={isOnCooldown}
-              onClick={handleCellClick}
+              onClaim={handleClaim}
+              onUnclaim={handleUnclaim}
             />
           ))}
         </div>
@@ -81,15 +91,15 @@ export function Grid({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="text-center"
+        className="text-center space-y-1"
       >
         <p className="text-[#4A4640] font-medium text-sm sm:text-base">
-          Click any{" "}
+          Click {" "}
           <span
-            className="inline-block w-5 h-5 bg-[#FFFEF9] border-2 border-[#2D2A26] align-middle mx-1"
+            className="inline-block w-5 h-5 rounded-sm bg-[#FFFEF9] border-2 border-[#2D2A26] align-middle mx-1"
             style={{ boxShadow: "2px 2px 0px #2D2A26" }}
-          />{" "}
-          empty cell to claim it!
+          />
+          {" "}to claim • Click your own cell to unclaim
         </p>
       </motion.div>
     </motion.div>

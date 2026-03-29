@@ -39,8 +39,8 @@ export function ConnectionStatus({
 
   return (
     <div
-      className="flex items-center gap-2 px-3 py-1.5 bg-[#FFFEF9] border-2 border-[#2D2A26]"
-      style={{ boxShadow: "3px 3px 0px #2D2A26" }}
+      className="flex justify-center items-center gap-2 w-24 bg-[#FFFEF9] border-2 rounded-sm border-[#2D2A26]"
+      style={{ boxShadow: "2px 2px 0px #2D2A26" }}
     >
       <motion.div
         className="w-3 h-3 rounded-full"

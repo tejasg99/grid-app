@@ -8,29 +8,34 @@ export class GridService {
 
     if (!exists) {
       console.log("🎮 Initializing new grid...");
-      const cells: Record<string, string> = {};
-
-      for (let row = 0; row < GRID_CONFIG.rows; row++) {
-        for (let col = 0; col < GRID_CONFIG.cols; col++) {
-          const cellId = `${row}-${col}`;
-          const cell: Cell = {
-            id: cellId,
-            ownerId: null,
-            ownerColor: null,
-            ownerName: null,
-            claimedAt: null,
-          };
-          cells[cellId] = JSON.stringify(cell);
-        }
-      }
-
-      await redis.hset(REDIS_KEYS.GRID_CELLS, cells);
-      console.log(
-        `✅ Grid initialized with ${GRID_CONFIG.rows * GRID_CONFIG.cols} cells`,
-      );
+      await this.createEmptyGrid();
     } else {
       console.log("✅ Grid already exists in Redis");
     }
+  }
+
+  // Create an empty grid
+  private async createEmptyGrid(): Promise<void> {
+    const cells: Record<string, string> = {};
+
+    for (let row = 0; row < GRID_CONFIG.rows; row++) {
+      for (let col = 0; col < GRID_CONFIG.cols; col++) {
+        const cellId = `${row}-${col}`;
+        const cell: Cell = {
+          id: cellId,
+          ownerId: null,
+          ownerColor: null,
+          ownerName: null,
+          claimedAt: null,
+        };
+        cells[cellId] = JSON.stringify(cell);
+      }
+    }
+
+    await redis.hset(REDIS_KEYS.GRID_CELLS, cells);
+    console.log(
+      `✅ Grid initialized with ${GRID_CONFIG.rows * GRID_CONFIG.cols} cells`,
+    );
   }
 
   // Get complete grid state
@@ -102,10 +107,55 @@ export class GridService {
     return { success: true, cell: updatedCell };
   }
 
-  // Reset grid (useful for testing)
-  async resetGrid(): Promise<void> {
+  // Unclaim a cell (toggle off)
+  async unclaimCell(
+    cellId: string,
+    userId: string,
+  ): Promise<{ success: boolean; cell?: Cell; error?: string }> {
+    // Check if cell exists
+    const existingCell = await this.getCell(cellId);
+
+    if (!existingCell) {
+      return { success: false, error: "Cell does not exist" };
+    }
+
+    // Check if cell belongs to this user
+    if (existingCell.ownerId !== userId) {
+      return { success: false, error: "You can only unclaim your own cells" };
+    }
+
+    // Check cooldown
+    const cooldownKey = REDIS_KEYS.USER_COOLDOWN(userId);
+    const isOnCooldown = await redis.exists(cooldownKey);
+
+    if (isOnCooldown) {
+      return { success: false, error: "Please wait before unclaiming" };
+    }
+
+    // Unclaim the cell
+    const updatedCell: Cell = {
+      id: cellId,
+      ownerId: null,
+      ownerColor: null,
+      ownerName: null,
+      claimedAt: null,
+    };
+
+    // Use transaction to ensure atomicity
+    const pipeline = redis.pipeline();
+    pipeline.hset(REDIS_KEYS.GRID_CELLS, cellId, JSON.stringify(updatedCell));
+    pipeline.set(cooldownKey, "1", "PX", COOLDOWN_MS); // Set cooldown with TTL
+    await pipeline.exec();
+
+    return { success: true, cell: updatedCell };
+  }
+
+  // Reset grid (clears all claims)
+  async resetGrid(): Promise<GridState> {
+    console.log("🔄 Resetting grid...");
     await redis.del(REDIS_KEYS.GRID_CELLS);
-    await this.initializeGrid();
+    await this.createEmptyGrid();
+    return this.getGridState();
   }
 }
 

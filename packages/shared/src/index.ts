@@ -44,6 +44,18 @@ export interface CellClaimedData {
   user: User;
 }
 
+// Cell unclaimed event data
+export interface CellUnclaimedData {
+  cell: Cell;
+  user: User;
+}
+
+// Grid reset event data
+export interface GridResetData {
+  grid: GridState;
+  users: User[];
+}
+
 // ============================================
 // SOCKET EVENT TYPES
 // ============================================
@@ -51,6 +63,8 @@ export interface CellClaimedData {
 export interface ServerToClientEvents {
   "game:init": (data: GameInitData) => void;
   "grid:cell-claimed": (data: CellClaimedData) => void;
+  "grid:cell-unclaimed": (data: CellUnclaimedData) => void;
+  "grid:reset-complete": (data: GridResetData) => void;
   "user:joined": (user: User) => void;
   "user:left": (userId: string) => void;
   "users:update": (users: User[]) => void;
@@ -68,6 +82,13 @@ export interface ClientToServerEvents {
   ) => void;
   "grid:claim-cell": (
     cellId: string,
+    callback: (response: { success: boolean; error?: string }) => void,
+  ) => void;
+  "grid:unclaim-cell": (
+    cellId: string,
+    callback: (response: { success: boolean; error?: string }) => void,
+  ) => void;
+  "grid:reset-request": (
     callback: (response: { success: boolean; error?: string }) => void,
   ) => void;
 }

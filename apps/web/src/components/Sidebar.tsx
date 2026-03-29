@@ -19,7 +19,7 @@ export function Sidebar({ currentUser, users, isOnCooldown }: SidebarProps) {
   const remainingCells = totalCells - claimedCells;
 
   return (
-    <aside className="w-80 shrink-0 border-l-4 border-[#2D2A26] bg-[#FDF6E3] p-5 overflow-y-auto hidden md:flex flex-col gap-5">
+    <aside className="w-80 shrink-0 border-l-3 border-[#2D2A26] bg-[#FDF6E3] overflow-y-auto hidden md:flex flex-col gap-6">
       {/* User Stats */}
       {currentUser && <UserStats user={currentUser} />}
 
@@ -31,9 +31,9 @@ export function Sidebar({ currentUser, users, isOnCooldown }: SidebarProps) {
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.05 }}
-        className="bg-[#FFFEF9] border-3 border-[#2D2A26] p-4"
+        className="bg-[#FFFEF9] border-2 rounded-xs border-[#2D2A26] p-4"
         style={{
-          boxShadow: "5px 5px 0px #2D2A26",
+          boxShadow: "4px 4px 0px #2D2A26",
           borderWidth: "3px",
         }}
       >
@@ -73,9 +73,9 @@ export function Sidebar({ currentUser, users, isOnCooldown }: SidebarProps) {
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.2 }}
-        className="bg-[#FFFEF9] border-3 border-[#2D2A26] p-4 mt-auto"
+        className="bg-[#FFFEF9] border-2 rounded-xs border-[#2D2A26] p-4 mt-auto"
         style={{
-          boxShadow: "5px 5px 0px #2D2A26",
+          boxShadow: "4px 4px 1px #2D2A26",
           borderWidth: "3px",
         }}
       >

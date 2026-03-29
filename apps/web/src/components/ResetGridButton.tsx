@@ -3,20 +3,26 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-interface ExitButtonProps {
-  onExit: () => void;
+interface ResetGridButtonProps {
+  onReset: () => void;
 }
 
-export function ExitButton({ onExit }: ExitButtonProps) {
+export function ResetGridButton({ onReset }: ResetGridButtonProps) {
   const [showConfirm, setShowConfirm] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
-  const handleExitClick = () => {
+  const handleResetClick = () => {
     setShowConfirm(true);
   };
 
-  const handleConfirm = () => {
-    setShowConfirm(false);
-    onExit();
+  const handleConfirm = async () => {
+    setIsResetting(true);
+    try {
+      onReset();
+    } finally {
+      setIsResetting(false);
+      setShowConfirm(false);
+    }
   };
 
   const handleCancel = () => {
@@ -25,10 +31,10 @@ export function ExitButton({ onExit }: ExitButtonProps) {
 
   return (
     <>
-      {/* Exit Button */}
+      {/* Reset Button */}
       <motion.button
-        onClick={handleExitClick}
-        className="flex justify-center items-center gap-2 w-22 bg-[#EF4444] text-white font-bold text-sm uppercase tracking-wide border-2 rounded-sm border-[#2D2A26]"
+        onClick={handleResetClick}
+        className="flex justify-center items-center gap-2 w-20 bg-[#ffb637] text-white font-bold text-sm uppercase tracking-wide border-2 rounded-sm border-[#2D2A26]"
         style={{ boxShadow: "2px 2px 0px #2D2A26" }}
         whileHover={{ 
           x: -2, 
@@ -41,8 +47,8 @@ export function ExitButton({ onExit }: ExitButtonProps) {
           boxShadow: "2px 2px 0px #2D2A26",
         }}
       >
-        <span>🚪</span>
-        <span className="hidden sm:inline">Exit</span>
+        <span>🔄</span>
+        <span className="hidden sm:inline">Reset</span>
       </motion.button>
 
       {/* Confirmation Modal */}
@@ -64,34 +70,36 @@ export function ExitButton({ onExit }: ExitButtonProps) {
               onClick={(e) => e.stopPropagation()}
             >
               <div 
-                className="bg-[#FFFEF9] border-3 border-[#2D2A26] rounded-sm overflow-hidden"
+                className="bg-[#FFFEF9] border-3 rounded-sm border-[#2D2A26] overflow-hidden"
                 style={{ boxShadow: "4px 4px 4px #2D2A26" }}
               >
                 {/* Header */}
                 <div 
-                  className="bg-[#EF4444] px-6 py-4 text-center border-b-4 border-[#2D2A26]"
+                  className="bg-[#F59E0B] px-6 py-4 text-center border-b-4 border-[#2D2A26]"
                 >
-                  <span className="text-3xl">⚠️</span>
+                  <span className="text-3xl">🔄</span>
                   <h2 
                     className="text-xl font-black text-white uppercase tracking-tight mt-2"
                     style={{ textShadow: "2px 2px 0px rgba(0,0,0,0.2)" }}
                   >
-                    Leave Game?
+                    Reset Grid?
                   </h2>
                 </div>
 
                 {/* Content */}
                 <div className="p-6 bg-[#FDF6E3]">
                   <p className="text-[#4A4640] text-center mb-6">
-                    Are you sure you want to exit? Your claimed cells will remain, but you&apos;ll need to rejoin to continue playing.
+                    This will clear <strong>ALL</strong> claimed cells for <strong>ALL</strong> players. Everyone will start fresh. Are you sure?
                   </p>
 
                   <div className="flex gap-3">
                     {/* Cancel Button */}
                     <motion.button
                       onClick={handleCancel}
+                      disabled={isResetting}
                       className="flex-1 py-3 px-4 bg-[#FFFEF9] border-2 rounded-sm border-[#2D2A26]
-                               text-[#2D2A26] font-bold uppercase tracking-wide"
+                               text-[#2D2A26] font-bold uppercase tracking-wide
+                               disabled:opacity-50 disabled:cursor-not-allowed"
                       style={{ 
                         boxShadow: "2px 2px 0px #2D2A26",
                         borderWidth: "3px",
@@ -107,14 +115,16 @@ export function ExitButton({ onExit }: ExitButtonProps) {
                         boxShadow: "2px 2px 0px #2D2A26",
                       }}
                     >
-                      Stay
+                      Cancel
                     </motion.button>
 
-                    {/* Confirm Exit Button */}
+                    {/* Confirm Reset Button */}
                     <motion.button
                       onClick={handleConfirm}
-                      className="flex-1 py-3 px-4 bg-[#EF4444] border-2 rounded-sm border-[#2D2A26]
-                               text-white font-bold uppercase tracking-wide"
+                      disabled={isResetting}
+                      className="flex-1 py-3 px-4 bg-[#F59E0B] border-2 rounded-sm border-[#2D2A26]
+                               text-white font-bold uppercase tracking-wide
+                               disabled:opacity-50 disabled:cursor-not-allowed"
                       style={{ 
                         boxShadow: "2px 2px 0px #2D2A26",
                         borderWidth: "3px",
@@ -130,7 +140,19 @@ export function ExitButton({ onExit }: ExitButtonProps) {
                         boxShadow: "2px 2px 0px #2D2A26",
                       }}
                     >
-                      Exit
+                      {isResetting ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <motion.span
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          >
+                            🔄
+                          </motion.span>
+                          Resetting...
+                        </span>
+                      ) : (
+                        "Reset"
+                      )}
                     </motion.button>
                   </div>
                 </div>

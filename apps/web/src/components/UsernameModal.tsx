@@ -129,10 +129,10 @@ export function UsernameModal({
                   <motion.button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-[#22C55E] border-3 border-[#2D2A26] text-white font-black text-lg uppercase  disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-100 cursor-pointer"
+                    className="w-full bg-[#22C55E] border-3 rounded-sm border-[#2D2A26] text-white font-black text-lg uppercase  disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-100 cursor-pointer"
                     style={{
-                      boxShadow: "2px 2px 0px #2D2A26",
-                      borderWidth: "0.5px",
+                      boxShadow: "2px 2px 1px #2D2A26",
+                      borderWidth: "1px",
                       textShadow: "2px 2px 0px rgba(0,0,0,0.2)",
                     }}
                     whileHover={{

@@ -6,6 +6,7 @@ import { useGame } from "@/hooks/useGame";
 import { UsernameModal } from "@/components/UsernameModal";
 import { ConnectionStatus } from "@/components/ConnectionStatus";
 import { ExitButton } from "@/components/ExitButton";
+import { ResetGridButton } from "@/components/ResetGridButton";
 import { Grid } from "@/components/Grid";
 import { Sidebar } from "@/components/Sidebar";
 
@@ -19,6 +20,8 @@ export default function Home() {
     isConnecting,
     joinGame,
     claimCell,
+    unclaimCell,
+    resetGrid,
     exitGame,
     isOnCooldown,
   } = useGame();
@@ -39,11 +42,24 @@ export default function Home() {
     }
   };
 
-  const handleCellClick = async (cellId: string) => {
-    console.log(`Page: handling cell click for ${cellId}`);
+  const handleCellClaim = async (cellId: string) => {
     const result = await claimCell(cellId);
     if (!result.success && result.error) {
       console.log("Claim failed:", result.error);
+    }
+  };
+
+  const handleCellUnclaim = async (cellId: string) => {
+    const result = await unclaimCell(cellId);
+    if (!result.success && result.error) {
+      console.log("Unclaim failed:", result.error);
+    }
+  };
+
+  const handleResetGrid = async () => {
+    const result = await resetGrid();
+    if (!result.success && result.error) {
+      console.log("Reset failed:", result.error);
     }
   };
 
@@ -67,7 +83,7 @@ export default function Home() {
           <motion.header
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="shrink-0 border-b-4 border-[#2D2A26] bg-[#FFFEF9]"
+            className="shrink-0 border-b-2 border-[#2D2A26] bg-[#FFFEF9]"
             style={{ boxShadow: "0 4px 0 #2D2A26" }}
           >
             <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -88,12 +104,13 @@ export default function Home() {
                 </h1>
               </div>
 
-              {/* Right: Connection Status & Exit */}
+              {/* Right: Actions */}
               <div className="flex items-center gap-3">
                 <ConnectionStatus
                   isConnected={isConnected}
                   isConnecting={isConnecting}
                 />
+                <ResetGridButton onReset={handleResetGrid} />
                 <ExitButton onExit={handleExit} />
               </div>
             </div>
@@ -108,7 +125,8 @@ export default function Home() {
                   grid={grid}
                   currentUser={currentUser}
                   isOnCooldown={isOnCooldown}
-                  onCellClick={handleCellClick}
+                  onCellClaim={handleCellClaim}
+                  onCellUnclaim={handleCellUnclaim}
                 />
               ) : (
                 <motion.div
@@ -143,7 +161,7 @@ export default function Home() {
           </div>
 
           {/* Mobile Stats Bar (visible on small screens) */}
-          <div className="md:hidden border-t-4 border-[#2D2A26] bg-[#FFFEF9] p-3">
+          <div className="md:hidden border-t-2 border-[#2D2A26] bg-[#FFFEF9] p-3">
             <div className="flex items-center justify-between">
               {currentUser && (
                 <>

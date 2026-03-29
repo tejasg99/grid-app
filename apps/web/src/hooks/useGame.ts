@@ -7,6 +7,8 @@ import type {
   User,
   GameInitData,
   CellClaimedData,
+  CellUnclaimedData,
+  GridResetData,
 } from "@grid-app/shared";
 
 interface GameState {
@@ -21,6 +23,8 @@ interface UseGameReturn extends GameState {
   isConnecting: boolean;
   joinGame: (username: string) => Promise<boolean>;
   claimCell: (cellId: string) => Promise<{ success: boolean; error?: string }>;
+  unclaimCell: (cellId: string) => Promise<{ success: boolean; error?: string }>;
+  resetGrid: () => Promise<{ success: boolean; error?: string }>;
   exitGame: () => void;
   isOnCooldown: boolean;
 }
@@ -82,6 +86,52 @@ export function useGame(): UseGameReturn {
       });
     }
 
+    // Handle cell unclaimed by any user
+    function handleCellUnclaimed(data: CellUnclaimedData) {
+      console.log("🔄 Cell unclaimed:", data);
+      setGameState((prev) => {
+        if (!prev.grid) return prev;
+
+        const updatedCells = {
+          ...prev.grid.cells,
+          [data.cell.id]: data.cell,
+        };
+
+        const updatedUsers = prev.users.map((u) =>
+          u.id === data.user.id ? data.user : u
+        );
+
+        const updatedCurrentUser =
+          prev.currentUser?.id === data.user.id
+            ? data.user
+            : prev.currentUser;
+
+        return {
+          ...prev,
+          grid: { ...prev.grid, cells: updatedCells },
+          users: updatedUsers,
+          currentUser: updatedCurrentUser,
+        };
+      });
+    }
+
+    // Handle grid reset
+    function handleGridReset(data: GridResetData) {
+      console.log("🔄 Grid reset request:", data);
+      setGameState((prev) => {
+        const updatedCurrentUser = prev.currentUser
+          ? data.users.find((u) => u.id === prev.currentUser?.id) || { ...prev.currentUser, blockCount: 0 }
+          : null;
+
+        return {
+          ...prev,
+          grid: data.grid,
+          users: data.users,
+          currentUser: updatedCurrentUser,
+        };
+      });
+    }
+
     // Handle new user joining (only for OTHER users, not self)
     function handleUserJoined(user: User) {
       console.log("👤 User joined:", user);
@@ -132,6 +182,8 @@ export function useGame(): UseGameReturn {
 
     socket.on("game:init", handleGameInit);
     socket.on("grid:cell-claimed", handleCellClaimed);
+    socket.on("grid:cell-unclaimed", handleCellUnclaimed);
+    socket.on("grid:reset-complete", handleGridReset);
     socket.on("user:joined", handleUserJoined);
     socket.on("user:left", handleUserLeft);
     socket.on("users:update", handleUsersUpdate);
@@ -140,6 +192,8 @@ export function useGame(): UseGameReturn {
     return () => {
       socket.off("game:init", handleGameInit);
       socket.off("grid:cell-claimed", handleCellClaimed);
+      socket.off("grid:cell-unclaimed", handleCellUnclaimed);
+      socket.off("grid:reset-complete", handleGridReset);
       socket.off("user:joined", handleUserJoined);
       socket.off("user:left", handleUserLeft);
       socket.off("users:update", handleUsersUpdate);
@@ -228,6 +282,49 @@ export function useGame(): UseGameReturn {
     [socket, isOnCooldown],
   );
 
+  // Unclaim a cell (toggle)
+  const unclaimCell = useCallback(
+    async (cellId: string): Promise<{ success: boolean; error?: string }> => {
+      return new Promise((resolve) => {
+        if (!socket.connected) {
+          resolve({ success: false, error: "Not connected" });
+          return;
+        }
+
+        if (isOnCooldown) {
+          resolve({ success: false, error: "Please wait before unclaiming" });
+          return;
+        }
+
+        socket.emit("grid:unclaim-cell", cellId, (response: { success: boolean; error?: string }) => {
+          if (response.success) {
+            setIsOnCooldown(true);
+            setTimeout(() => setIsOnCooldown(false), 1000);
+          }
+          resolve(response);
+        });
+      });
+    },
+    [socket, isOnCooldown]
+  );
+
+  // Reset grid
+  const resetGrid = useCallback(
+    async (): Promise<{ success: boolean; error?: string }> => {
+      return new Promise((resolve) => {
+        if (!socket.connected) {
+          resolve({ success: false, error: "Not connected" });
+          return;
+        }
+
+        socket.emit("grid:reset-request", (response: { success: boolean; error?: string }) => {
+          resolve(response);
+        });
+      });
+    },
+    [socket]
+  );
+
   // Exit game
   const exitGame = useCallback(() => {
     console.log("🚪 Exiting game...");
@@ -248,6 +345,8 @@ export function useGame(): UseGameReturn {
     isConnecting,
     joinGame,
     claimCell,
+    unclaimCell,
+    resetGrid,
     exitGame,
     isOnCooldown,
   };
