@@ -21,18 +21,21 @@ interface UseGameReturn extends GameState {
   isConnecting: boolean;
   joinGame: (username: string) => Promise<boolean>;
   claimCell: (cellId: string) => Promise<{ success: boolean; error?: string }>;
+  exitGame: () => void;
   isOnCooldown: boolean;
 }
 
-export function useGame(): UseGameReturn {
-  const { socket, isConnected, isConnecting, connect } = useSocket();
+const initialGameState: GameState = {
+  grid: null,
+  users: [],
+  currentUser: null,
+  isJoined: false,
+};
 
-  const [gameState, setGameState] = useState<GameState>({
-    grid: null,
-    users: [],
-    currentUser: null,
-    isJoined: false,
-  });
+export function useGame(): UseGameReturn {
+  const { socket, isConnected, isConnecting, connect, disconnect } = useSocket();
+
+  const [gameState, setGameState] = useState<GameState>(initialGameState);
 
   const [isOnCooldown, setIsOnCooldown] = useState(false);
 
@@ -79,13 +82,26 @@ export function useGame(): UseGameReturn {
       });
     }
 
-    // Handle new user joining
+    // Handle new user joining (only for OTHER users, not self)
     function handleUserJoined(user: User) {
       console.log("👤 User joined:", user);
-      setGameState((prev) => ({
-        ...prev,
-        users: [...prev.users.filter((u) => u.id !== user.id), user],
-      }));
+      setGameState((prev) => {
+        // Don't add if it's the current user (they're already in the list from game:init)
+        if (prev.currentUser?.id === user.id) {
+          return prev;
+        }
+        
+        // Don't add duplicates
+        const existingUser = prev.users.find((u) => u.id === user.id);
+        if (existingUser) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          users: [...prev.users, user],
+        };
+      });
     }
 
     // Handle user leaving
@@ -99,6 +115,7 @@ export function useGame(): UseGameReturn {
 
     // Handle users list update
     function handleUsersUpdate(users: User[]) {
+      console.log("👥 Users update:", users);
       setGameState((prev) => ({
         ...prev,
         users,
@@ -151,10 +168,12 @@ export function useGame(): UseGameReturn {
               },
             );
           };
+
           socket.on("connect", handleConnect);
           connect();
           return;
         }
+
         // Already connected, emit join directly
         socket.emit(
           "user:join",
@@ -178,22 +197,24 @@ export function useGame(): UseGameReturn {
     async (cellId: string): Promise<{ success: boolean; error?: string }> => {
       return new Promise((resolve) => {
         if (!socket.connected) {
+          console.log("Cannot claim: socket not connected");
           resolve({ success: false, error: "Not connected" });
           return;
         }
 
         if (isOnCooldown) {
-          resolve({
-            success: false,
-            error: "Please wait before claiming another cell",
-          });
+          console.log("Cannot claim: on cooldown");
+          resolve({ success: false, error: "Please wait before claiming another cell" });
           return;
         }
+
+        console.log(`Emitting claim for cell: ${cellId}`);
 
         socket.emit(
           "grid:claim-cell",
           cellId,
           (response: { success: boolean; error?: string }) => {
+            console.log("Claim response:", response);
             if (response.success) {
               // Start cooldown
               setIsOnCooldown(true);
@@ -207,12 +228,27 @@ export function useGame(): UseGameReturn {
     [socket, isOnCooldown],
   );
 
+  // Exit game
+  const exitGame = useCallback(() => {
+    console.log("🚪 Exiting game...");
+    
+    // Disconnect socket (this will trigger user:left on server)
+    disconnect();
+    
+    // Reset local state
+    setGameState(initialGameState);
+    setIsOnCooldown(false);
+    
+    console.log("✅ Game exited, state reset");
+  }, [disconnect]);
+
   return {
     ...gameState,
     isConnected,
     isConnecting,
     joinGame,
     claimCell,
+    exitGame,
     isOnCooldown,
   };
 }

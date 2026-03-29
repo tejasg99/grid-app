@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { getSocket, disconnectSocket, type TypedSocket } from "@/lib/socket";
+import { useEffect, useState, useCallback} from "react";
+import { getSocket, type TypedSocket } from "@/lib/socket";
 
 interface UseSocketReturn {
   socket: TypedSocket;
@@ -23,16 +23,19 @@ export function useSocket(): UseSocketReturn {
   useEffect(() => {
     // 3. Only define listeners here for FUTURE changes (events)
     function onConnect() {
+      console.log("✅ Socket connected:", socket.id);
       setIsConnected(true);
       setIsConnecting(false);
     }
 
-    function onDisconnect() {
+    function onDisconnect(reason: string) {
+      console.log("❌ Socket disconnected:", reason);
       setIsConnected(false);
       setIsConnecting(false);
     }
 
-    function onConnectError() {
+    function onConnectError(error: Error) {
+      console.error("🔴 Socket connection error:", error.message);
       setIsConnecting(false);
     }
 
@@ -58,9 +61,12 @@ export function useSocket(): UseSocketReturn {
   }, [socket]);
 
   const disconnect = useCallback(() => {
-    disconnectSocket();
+    if(socket.connected) {
+      socket.disconnect();
+    }
     setIsConnected(false);
-  }, []);
+    setIsConnecting(false);
+  }, [socket]);
 
   return {
     socket,

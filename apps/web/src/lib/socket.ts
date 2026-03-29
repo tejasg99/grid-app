@@ -15,6 +15,7 @@ let socket: TypedSocket | null = null;
 
 export function getSocket(): TypedSocket {
   if (!socket) {
+    console.log("🔌 Creating new socket connection to:", SOCKET_URL);
     socket = io(SOCKET_URL, {
       autoConnect: false, // We'll connect manually after username is set
       reconnection: true,
@@ -28,7 +29,8 @@ export function getSocket(): TypedSocket {
 
 export function disconnectSocket(): void {
   if (socket) {
+    console.log("🔌 Disconnecting socket...");
     socket.disconnect();
-    socket = null;
+    socket = null; // Clear the instance so a new one is created on reconnect
   }
 }

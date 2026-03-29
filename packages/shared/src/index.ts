@@ -84,14 +84,14 @@ export const GRID_CONFIG: GridConfig = {
 export const COOLDOWN_MS = 1000; // 1 second cooldown
 
 export const USER_COLORS = [
-  "#3b82f6", // Blue
-  "#ef4444", // Red
-  "#22c55e", // Green
-  "#f59e0b", // Amber
-  "#8b5cf6", // Purple
-  "#ec4899", // Pink
-  "#06b6d4", // Cyan
-  "#f97316", // Orange
-  "#6366f1", // Indigo
-  "#14b8a6", // Teal
+  "#3B82F6", // Bright Blue
+  "#EF4444", // Bright Red
+  "#22C55E", // Bright Green
+  "#F59E0B", // Bright Amber
+  "#A855F7", // Bright Purple
+  "#EC4899", // Bright Pink
+  "#06B6D4", // Bright Cyan
+  "#F97316", // Bright Orange
+  "#6366F1", // Bright Indigo
+  "#14B8A6", // Bright Teal
 ] as const;

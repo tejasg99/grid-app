@@ -1,9 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { useGame } from "@/hooks/useGame";
 import { UsernameModal } from "@/components/UsernameModal";
 import { ConnectionStatus } from "@/components/ConnectionStatus";
+import { ExitButton } from "@/components/ExitButton";
+import { Grid } from "@/components/Grid";
+import { Sidebar } from "@/components/Sidebar";
 
 export default function Home() {
   const {
@@ -14,7 +18,8 @@ export default function Home() {
     isConnected,
     isConnecting,
     joinGame,
-    // claimCell,
+    claimCell,
+    exitGame,
     isOnCooldown,
   } = useGame();
 
@@ -34,8 +39,20 @@ export default function Home() {
     }
   };
 
+  const handleCellClick = async (cellId: string) => {
+    console.log(`Page: handling cell click for ${cellId}`);
+    const result = await claimCell(cellId);
+    if (!result.success && result.error) {
+      console.log("Claim failed:", result.error);
+    }
+  };
+
+  const handleExit = () => {
+    exitGame();
+  };
+
   return (
-    <main className="min-h-screen bg-slate-900">
+    <main className="min-h-screen bg-[#F5E6D3]">
       {/* Username Modal */}
       <UsernameModal
         isOpen={!isJoined}
@@ -47,120 +64,125 @@ export default function Home() {
       {isJoined && (
         <div className="h-screen flex flex-col">
           {/* Header */}
-          <header className="shrink-0 border-b border-slate-700 bg-slate-800/50 backdrop-blur-sm">
+          <motion.header
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="shrink-0 border-b-4 border-[#2D2A26] bg-[#FFFEF9]"
+            style={{ boxShadow: "0 4px 0 #2D2A26" }}
+          >
             <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+              {/* Left: Logo */}
               <div className="flex items-center gap-3">
-                <span className="text-2xl">🎮</span>
-                <h1 className="text-xl font-bold text-white">Grid Clash</h1>
+                <motion.span
+                  className="text-2xl sm:text-3xl"
+                  animate={{ rotate: [0, -10, 10, -10, 0] }}
+                  transition={{ duration: 0.5, delay: 0.5 }}
+                >
+                  🎮
+                </motion.span>
+                <h1
+                  className="text-xl sm:text-2xl font-black text-[#2D2A26] uppercase tracking-tight"
+                  style={{ textShadow: "2px 2px 0px #D4C4B0" }}
+                >
+                  Grid Clash
+                </h1>
               </div>
-              <ConnectionStatus
-                isConnected={isConnected}
-                isConnecting={isConnecting}
-              />
+
+              {/* Right: Connection Status & Exit */}
+              <div className="flex items-center gap-3">
+                <ConnectionStatus
+                  isConnected={isConnected}
+                  isConnecting={isConnecting}
+                />
+                <ExitButton onExit={handleExit} />
+              </div>
             </div>
-          </header>
+          </motion.header>
 
           {/* Game Area */}
           <div className="flex-1 flex overflow-hidden">
             {/* Grid Area */}
-            <div className="flex-1 flex items-center justify-center p-4 md:p-8">
-              <div className="text-center">
-                <p className="text-slate-400 mb-4">
-                  Grid will be rendered here
-                </p>
-                <p className="text-slate-500 text-sm">
-                  {grid
-                    ? `${Object.keys(grid.cells).length} cells loaded`
-                    : "Loading grid..."}
-                </p>
-                {currentUser && (
-                  <p className="text-slate-400 mt-4">
-                    Playing as:{" "}
-                    <span
-                      className="font-semibold"
-                      style={{ color: currentUser.color }}
-                    >
-                      {currentUser.username}
-                    </span>
+            <div className="flex-1 flex items-center justify-center p-4 sm:p-6 md:p-8 overflow-auto">
+              {grid ? (
+                <Grid
+                  grid={grid}
+                  currentUser={currentUser}
+                  isOnCooldown={isOnCooldown}
+                  onCellClick={handleCellClick}
+                />
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center"
+                >
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
+                    className="text-4xl mb-4"
+                  >
+                    ⏳
+                  </motion.div>
+                  <p className="text-[#8B8078] font-semibold">
+                    Loading grid...
                   </p>
-                )}
-              </div>
+                </motion.div>
+              )}
             </div>
 
             {/* Sidebar */}
-            <aside className="w-72 shrink-0 border-l border-slate-700 bg-slate-800/30 p-4 overflow-y-auto hidden md:block">
-              {/* User Stats */}
-              <div className="bg-slate-800 rounded-xl p-4 mb-4 border border-slate-700">
-                <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
-                  Your Stats
-                </h2>
-                {currentUser && (
-                  <div className="flex items-center gap-3">
+            <Sidebar
+              currentUser={currentUser}
+              users={users}
+              isOnCooldown={isOnCooldown}
+            />
+          </div>
+
+          {/* Mobile Stats Bar (visible on small screens) */}
+          <div className="md:hidden border-t-4 border-[#2D2A26] bg-[#FFFEF9] p-3">
+            <div className="flex items-center justify-between">
+              {currentUser && (
+                <>
+                  <div className="flex items-center gap-2">
                     <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
-                      style={{ backgroundColor: currentUser.color }}
+                      className="w-6 h-6 border-2 border-[#2D2A26] flex items-center justify-center text-white text-xs font-bold"
+                      style={{
+                        backgroundColor: currentUser.color,
+                        boxShadow: "2px 2px 0px #2D2A26",
+                      }}
                     >
                       {currentUser.username.charAt(0).toUpperCase()}
                     </div>
-                    <div>
-                      <p className="font-medium text-white">
-                        {currentUser.username}
-                      </p>
-                      <p className="text-sm text-slate-400">
-                        {currentUser.blockCount} blocks claimed
-                      </p>
-                    </div>
+                    <span className="font-bold text-[#2D2A26]">
+                      {currentUser.username}
+                    </span>
                   </div>
-                )}
-              </div>
-
-              {/* Online Users */}
-              <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
-                <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
-                  Online ({users.length})
-                </h2>
-                <ul className="space-y-2">
-                  {users.map((user) => (
-                    <li
-                      key={user.id}
-                      className="flex items-center gap-2 text-sm"
-                    >
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: user.color }}
-                      />
-                      <span
-                        className={
-                          user.id === currentUser?.id
-                            ? "text-white font-medium"
-                            : "text-slate-300"
-                        }
-                      >
-                        {user.username}
-                        {user.id === currentUser?.id && (
-                          <span className="text-slate-500 ml-1">(you)</span>
-                        )}
-                      </span>
-                      <span className="text-slate-500 ml-auto">
-                        {user.blockCount}
-                      </span>
-                    </li>
-                  ))}
-                  {users.length === 0 && (
-                    <li className="text-slate-500 text-sm">No users online</li>
-                  )}
-                </ul>
-              </div>
-
-              {/* Cooldown Indicator */}
-              {isOnCooldown && (
-                <div className="mt-4 bg-amber-500/20 border border-amber-500/50 rounded-xl p-3 text-center">
-                  <p className="text-amber-400 text-sm">
-                    ⏳ Cooldown active...
-                  </p>
-                </div>
+                  <div className="flex items-center gap-4 text-sm">
+                    <span className="text-[#8B8078]">
+                      <span className="font-black text-[#2D2A26]">
+                        {currentUser.blockCount}
+                      </span>{" "}
+                      blocks
+                    </span>
+                    <span className="text-[#8B8078]">
+                      <span className="font-black text-[#2D2A26]">
+                        {users.length}
+                      </span>{" "}
+                      online
+                    </span>
+                  </div>
+                </>
               )}
-            </aside>
+            </div>
+            {isOnCooldown && (
+              <div className="mt-2 text-center text-sm text-[#F59E0B] font-bold">
+                ⏳ Cooldown active...
+              </div>
+            )}
           </div>
         </div>
       )}

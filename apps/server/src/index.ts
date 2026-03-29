@@ -5,6 +5,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 import { gridService } from "./services/grid.service.js";
+import { userService } from "./services/user.service.js";
 import { setupSocketHandlers } from "./socket/handlers.js";
 import type {
   ServerToClientEvents,
@@ -57,7 +58,8 @@ app.get("/health", (req, res) => {
 app.post("/api/reset-grid", async (req, res) => {
   try {
     await gridService.resetGrid();
-    res.json({ success: true, message: "Grid reset successfully" });
+    await userService.clearAllUsers();
+    res.json({ success: true, message: "Grid and users reset successfully" });
   } catch (error) {
     res.status(500).json({ success: false, error: "Failed to reset grid" });
   }
@@ -71,6 +73,10 @@ const PORT = process.env.PORT || 3001;
 
 async function startServer() {
   try {
+    // Clear stale users from previous sessions
+    await userService.clearAllUsers();
+    console.log("🧹 Cleared stale users from previous session");
+
     // Initialize grid in Redis
     await gridService.initializeGrid();
 
