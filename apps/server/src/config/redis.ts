@@ -9,10 +9,7 @@ if (!redisUrl) {
   throw new Error("REDIS_URL environment variable is not set");
 }
 
-export const redis = new Redis(redisUrl, {
-  maxRetriesPerRequest: 3,
-  retryDelayOnFailover: 100,
-});
+export const redis = new Redis(redisUrl);
 
 redis.on("connect", () => {
   console.log("✅ Connected to Redis (Upstash)");

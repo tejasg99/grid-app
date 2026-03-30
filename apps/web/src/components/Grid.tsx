@@ -3,7 +3,7 @@
 import { useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Cell } from "./Cell";
-import type { GridState, User } from "@grid-app/shared";
+import type { GridState, User } from "../types/shared";
 
 interface GridProps {
   grid: GridState;

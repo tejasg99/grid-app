@@ -1,5 +1,5 @@
 import { redis, REDIS_KEYS } from "../config/redis.js";
-import { User, USER_COLORS } from "@grid-app/shared";
+import { User, USER_COLORS } from "../types/shared.js";
 
 export class UserService {
   private colorIndex = 0;

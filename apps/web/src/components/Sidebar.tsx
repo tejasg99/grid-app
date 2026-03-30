@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import type { User } from "@grid-app/shared";
+import type { User } from "../types/shared";
 import { UserStats } from "./UserStats";
 import { OnlineUsers } from "./OnlineUsers";
 import { CooldownIndicator } from "./CooldownIndicator";

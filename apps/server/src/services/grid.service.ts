@@ -1,5 +1,5 @@
 import { redis, REDIS_KEYS } from "../config/redis.js";
-import { Cell, GridState, GRID_CONFIG, COOLDOWN_MS } from "@grid-app/shared";
+import { Cell, GridState, GRID_CONFIG, COOLDOWN_MS } from "../types/shared.js";
 
 export class GridService {
   // Initialize empty grid in Redis if doesnt exist already

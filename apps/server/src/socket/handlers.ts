@@ -6,7 +6,7 @@ import type {
   ServerToClientEvents,
   ClientToServerEvents,
   User,
-} from "@grid-app/shared";
+} from "../types/shared.js";
 
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 type TypedServer = Server<ClientToServerEvents, ServerToClientEvents>;

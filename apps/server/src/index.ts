@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import cors from "cors";
@@ -10,7 +10,7 @@ import { setupSocketHandlers } from "./socket/handlers.js";
 import type {
   ServerToClientEvents,
   ClientToServerEvents,
-} from "@grid-app/shared";
+} from "./types/shared.js";
 
 // Load environment variables
 dotenv.config();
@@ -27,7 +27,7 @@ const allowedOrigins = [
 console.log("Allowed origins:", allowedOrigins);
 
 app.use(cors({
-  origin: (origin, callback) => {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
     // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
     
@@ -46,7 +46,7 @@ app.use(express.json());
 // Socket.io setup with typed events
 const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
   cors: {
-    origin: (origin, callback) => {
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
       if (!origin) return callback(null, true);
       
       if (allowedOrigins.some(allowed => origin.startsWith(allowed.replace(/\/$/, '')))) {
@@ -63,7 +63,7 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
 });
 
 // Health check endpoint
-app.get("/health", (req, res) => {
+app.get("/health", (_req: Request, res: Response) => {
   res.json({
     status: "ok",
     timestamp: new Date().toISOString(),
@@ -71,7 +71,7 @@ app.get("/health", (req, res) => {
   });
 });
 
-app.get("/", (req, res) => {
+app.get("/", (_req: Request, res: Response) => {
   res.json({ 
     name: "Grid Clash API",
     status: "running",
@@ -80,7 +80,7 @@ app.get("/", (req, res) => {
 });
 
 // API endpoint to reset grid
-app.post("/api/reset-grid", async (req, res) => {
+app.post("/api/reset-grid", async (_req: Request, res: Response) => {
   try {
     await gridService.resetGrid();
     await userService.clearAllUsers();

@@ -9,7 +9,7 @@ import type {
   CellClaimedData,
   CellUnclaimedData,
   GridResetData,
-} from "@grid-app/shared";
+} from "../types/shared";
 
 interface GameState {
   grid: GridState | null;

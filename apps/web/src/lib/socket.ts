@@ -2,7 +2,7 @@ import { io, Socket } from "socket.io-client";
 import type {
   ServerToClientEvents,
   ClientToServerEvents,
-} from "@grid-app/shared";
+} from "../types/shared";
 
 // Typed socket instance
 export type TypedSocket = Socket<ServerToClientEvents, ClientToServerEvents>;

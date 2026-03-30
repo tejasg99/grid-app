@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import type { User } from "@grid-app/shared";
+import type { User } from "../types/shared";
 
 interface OnlineUsersProps {
   users: User[];

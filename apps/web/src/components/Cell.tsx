@@ -2,7 +2,7 @@
 
 import { memo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import type { Cell as CellType } from "@grid-app/shared";
+import type { Cell as CellType } from "../types/shared";
 
 interface CellProps {
   cell: CellType;
